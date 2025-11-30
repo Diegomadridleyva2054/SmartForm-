@@ -4,7 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SmartForm </title>
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com">document.getElementById('videoLogin').style.display='block';
+</script>
 <meta name="theme-color" content="#dc2626">
 <style>
  
@@ -189,27 +190,37 @@ body {
   color: #000;
 }
 
+
+
+
 .fab-center {
   left: 50%;
   transform: translateX(-50%);
   bottom: 22px;
 }
 
+
 .fab-bottom-right {
   right: 22px;
   bottom: 22px;
 }
 
+
 .fab-bottom-left {
   left: 22px;
   bottom: 22px;
 }
+
   
   .modal-backdrop { position: fixed; inset:0; background: rgba(2,6,23,0.45); display:flex; align-items:center; justify-content:center; z-index:100; }
   .modal { width: 92%; max-width:520px; background: var(--card); border-radius:12px; padding:18px; box-shadow:0 12px 40px rgba(2,6,23,0.35); color:var(--text); }
   .modal .muted { color:var(--muted); font-size:.95rem; }
+
+ 
   .spinner { width:20px; height:20px; border-radius:50%; border:3px solid rgba(0,0,0,0.08); border-top-color: var(--brand); animation: spin .9s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+
   input, select, textarea { width:100%; padding:.6rem; border-radius:8px; border:1px solid rgba(0,0,0,0.08); background:transparent; color:var(--text); }
   label { font-size:.9rem; display:block; margin-bottom:6px; color:var(--muted); }
   .flex { display:flex; } .gap-2{ gap:.5rem; } .gap-3{ gap:.75rem; } .items-center{ align-items:center; } .justify-between{ justify-content:space-between; }
@@ -348,57 +359,8 @@ style="
   </div>
 
 </div>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBk-AJa0llxWdpwO5hDyL82QfRUsaUFkS0",
-  authDomain: "smartform-af289.firebaseapp.com",
-  projectId: "smartform-af289",
-  storageBucket: "smartform-af289.firebasestorage.app",
-  messagingSenderId: "1073014553828",
-  appId: "1:1073014553828:web:57bc873111bdc5ece200f1",
-  measurementId: "G-X9QF674S63"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,10); }
-function el(q){ return document.querySelector(q); }
-function elAll(q){ return Array.from(document.querySelectorAll(q)); }
-function timeNow(){ return new Date().toISOString(); }
-function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
-function escapeAttr(s){ return escapeHtml(s).replace(/\n/g,' '); }
-
-window.DB = {
-  // surveys
-  async loadSurveys(){
-    const snap = await getDocs(collection(db, "surveys"));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  },
-  async addSurvey(survey){
-    await addDoc(collection(db, "surveys"), survey);
-  },
-  async updateSurvey(id, survey){
-    await updateDoc(doc(db, "surveys", id), survey);
-  },
-  async deleteSurvey(id){
-    await deleteDoc(doc(db, "surveys", id));
-  },
-
-  async loadResponses(){
-    const snap = await getDocs(collection(db, "responses"));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  },
-  async addResponse(resp){
-    await addDoc(collection(db, "responses"), resp);
-  }
-};
-
-window.firebaseReady = true;
+<script>
 
 (function themeInit(){
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -418,11 +380,29 @@ window.firebaseReady = true;
 })();
 
 
-let usuario = {};
-document.getElementById('videoLogin').style.display='block';
-document.querySelector('.app-shell').style.paddingLeft='0px';
-document.querySelector('.side-nav').style.display='none';
+const DB = {
+  saveSurveys(surveys) { localStorage.setItem('sf_surveys', JSON.stringify(surveys || [])); },
+  loadSurveys() { try { return JSON.parse(localStorage.getItem('sf_surveys')||'[]'); } catch { return []; } },
+  saveResponses(res) { localStorage.setItem('sf_responses', JSON.stringify(res || [])); },
+  loadResponses() { try { return JSON.parse(localStorage.getItem('sf_responses')||'[]'); } catch { return []; } },
+  addSurvey(s) { const arr = DB.loadSurveys(); arr.unshift(s); DB.saveSurveys(arr); },
+  updateSurvey(id, s) { const arr = DB.loadSurveys().map(x=>x.id===id? s : x); DB.saveSurveys(arr); },
+  deleteSurvey(id) { const arr = DB.loadSurveys().filter(x=>x.id!==id); DB.saveSurveys(arr); },
+  addResponse(r) { const arr = DB.loadResponses(); arr.unshift(r); DB.saveResponses(arr); },
+};
 
+function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,10); }
+function el(q){ return document.querySelector(q); }
+function elAll(q){ return Array.from(document.querySelectorAll(q)); }
+function timeNow(){ return new Date().toISOString(); }
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/\n/g,' '); }
+
+
+let usuario = {};
+    document.getElementById('videoLogin').style.display='block';
+    document.querySelector('.app-shell').style.paddingLeft='0px';
+    document.querySelector('.side-nav').style.display='none'; 
 const loginPage = el('#loginPage');
 const app = el('#app');
 const contentArea = el('#contentArea');
@@ -432,7 +412,9 @@ const modalOk = el('#modalOk');
 const modalCancel = el('#modalCancel');
 const fabHelp = el('#fabHelp');
 
+
 function serverShow(options){
+ 
   modalContent.innerHTML = '';
   modalOk.style.display = 'none';
   modalCancel.style.display = 'none';
@@ -468,6 +450,7 @@ function serverConfirm(message, { title } = {}){
   });
 }
 
+
 el('#btnLogin').addEventListener('click', doLogin);
 el('#btnDemo').addEventListener('click', ()=> {
   el('#nombre').value = 'Alumno Invitado';
@@ -478,15 +461,17 @@ el('#btnTheme').addEventListener('click', ()=> window.setTheme());
 fabHelp.addEventListener('click', showHelpModal);
 el('#btnLogoutSmall').addEventListener('click', ()=> logout());
 
+
 elAll('.nav-item').forEach(n => {
   n.addEventListener('click', ()=> {
     const nav = n.getAttribute('data-nav');
-    if(nav) (async ()=> await navigate(nav))();
+    if(nav) navigate(nav);
     // active state
     elAll('.nav-item').forEach(x=>x.classList.remove('active'));
     n.classList.add('active');
   });
 });
+
 
 async function doLogin(){
   const nombre = el('#nombre').value.trim();
@@ -499,12 +484,14 @@ async function doLogin(){
     if(!ok) return;
   }
 
+ 
   const storedProfile = JSON.parse(localStorage.getItem('sf_profile_' + correo) || 'null');
   usuario = Object.assign({ nombre, correo, rol, grupo:'', especialidad:'', photo:'' }, storedProfile || {});
-  await startApp();
+  startApp();
 }
 
-async function startApp(){
+
+function startApp(){
   document.getElementById('videoLogin').style.display='none';
   document.querySelector('.app-shell').style.paddingLeft='270px';
   document.querySelector('.side-nav').style.display='flex';
@@ -513,8 +500,9 @@ async function startApp(){
   
   el('#userRole').textContent = `${usuario.nombre} • ${usuario.rol}`;
   fabHelp.style.display = 'flex';
-  await navigate('inicio');
+  navigate('inicio');
 }
+
 
 async function logout(){
   const ok = await serverConfirm('¿Estás seguro de que quieres cerrar sesión?', { title:'Cerrar sesión' });
@@ -534,19 +522,20 @@ async function logout(){
   }, 700);
 }
 
-async function navigate(name){
+
+function navigate(name){
   switch(name){
-    case 'inicio': return await renderInicio();
-    case 'crear': return await renderCreator();
-    case 'formularios': return await renderList();
-    case 'responder': return await renderResponderList();
-    case 'reportes': return await renderReportes();
-    case 'perfil': return await renderPerfil();
-    default: return await renderInicio();
+    case 'inicio': return renderInicio();
+    case 'crear': return renderCreator();
+    case 'formularios': return renderList();
+    case 'responder': return renderResponderList();
+    case 'reportes': return renderReportes();
+    case 'perfil': return renderPerfil();
+    default: renderInicio();
   }
 }
 
-async function renderInicio(){
+function renderInicio(){
   contentArea.innerHTML = `
     <div>
       <h3 style="margin:0 0 6px 0; font-weight:700;">Bienvenido, ${escapeHtml(usuario.nombre)}</h3>
@@ -559,21 +548,21 @@ async function renderInicio(){
         <div class="card p-3">
           <h4 style="margin:0 0 8px 0; font-weight:700;">Acciones rápidas</h4>
           <div style="margin-top:8px; display:flex; gap:8px;">
-            <button class="btn btn-primary" onclick="(async ()=> await navigate('crear'))()">Crear nueva</button>
-            <button class="btn btn-ghost" onclick="(async ()=> await navigate('formularios'))()">Ver guardadas</button>
+            <button class="btn btn-primary" onclick="navigate('crear')">Crear nueva</button>
+            <button class="btn btn-ghost" onclick="navigate('formularios')">Ver guardadas</button>
           </div>
         </div>
       </div>
     </div>
   `;
-  const rs = (await DB.loadSurveys()).sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||'')).slice(0,5);
+  const rs = DB.loadSurveys().slice(0,5);
   const out = rs.length ? `<ul style="margin-top:8px;">${rs.map(s=>`<li style="padding:6px 0;"><strong>${escapeHtml(s.title)}</strong> • ${new Date(s.createdAt).toLocaleString()}</li>`).join('')}</ul>` : '<p class="small mt-2">No hay encuestas todavía.</p>';
   el('#recentSurveys').innerHTML = out;
 }
 
-async function renderCreator(existingId){
-  const surveys = await DB.loadSurveys();
-  const editing = existingId ? surveys.find(s=>s.id===existingId) : null;
+
+function renderCreator(existingId){
+  const editing = existingId ? DB.loadSurveys().find(s=>s.id===existingId) : null;
   const draft = editing ? editing : { id: uid('survey'), title:'', createdAt: timeNow(), createdBy: usuario.nombre, questions: [] };
   contentArea.innerHTML = `
     <div style="display:grid; grid-template-columns:1fr 320px; gap:12px;">
@@ -601,7 +590,7 @@ async function renderCreator(existingId){
   `;
   let survey = JSON.parse(JSON.stringify(draft));
   renderQuestionList();
-  await renderMiniSaved();
+  renderMiniSaved();
 
   el('#btnAddQ').addEventListener('click', ()=> {
     survey.questions.push({ id: uid('q'), type: 'single', text: 'Pregunta nueva', options: ['Opción 1','Opción 2'] });
@@ -614,16 +603,13 @@ async function renderCreator(existingId){
     survey.title = title; survey.createdAt = survey.createdAt || timeNow(); survey.createdBy = usuario.nombre;
     
     serverShow({ loading: 'Guardando encuesta...', message: 'Hablando con el servidor...' });
-    try {
-      if(editing) await DB.updateSurvey(editing.id, survey);
-      else await DB.addSurvey(survey);
+    setTimeout(()=> {
+      if(editing) DB.updateSurvey(survey.id, survey);
+      else DB.addSurvey(survey);
       modalRoot.style.display = 'none';
-      await serverAlert('Encuesta guardada ✅', { title:'Listo' });
-      await navigate('formularios');
-    } catch(e){
-      modalRoot.style.display = 'none';
-      await serverAlert('Error guardando la encuesta: ' + (e.message||e), { title:'Error' });
-    }
+      serverAlert('Encuesta guardada ✅', { title:'Listo' });
+      navigate('formularios');
+    }, 600);
   });
 
   if(editing){
@@ -631,15 +617,12 @@ async function renderCreator(existingId){
       const ok = await serverConfirm('¿Eliminar encuesta?', { title:'Borrar' });
       if(!ok) return;
       serverShow({ loading:'Eliminando...', message:'Solicitando al servidor...' });
-      try {
-        await DB.deleteSurvey(editing.id);
+      setTimeout(()=> {
+        DB.deleteSurvey(editing.id);
         modalRoot.style.display = 'none';
-        await serverAlert('Eliminada', { title:'Borrar' });
-        await navigate('formularios');
-      } catch(e){
-        modalRoot.style.display = 'none';
-        await serverAlert('Error al eliminar: ' + (e.message||e));
-      }
+        serverAlert('Eliminada', { title:'Borrar' });
+        navigate('formularios');
+      }, 600);
     });
   }
 
@@ -717,15 +700,16 @@ async function renderCreator(existingId){
     if(action === 'changeType'){ const q = survey.questions[idx]; q.type = (q.type === 'single' ? 'multiple' : q.type === 'multiple' ? 'text' : 'single'); if(q.type!=='text' && !q.options) q.options=['Opción 1']; renderQuestionList(); return; }
   }
 
-  async function renderMiniSaved(){
-    const ms = (await DB.loadSurveys()).slice(0,6);
+  function renderMiniSaved(){
+    const ms = DB.loadSurveys().slice(0,6);
     el('#miniSaved').innerHTML = ms.length ? `<ul>${ms.map(s=>`<li style="padding:6px 0;">${escapeHtml(s.title)} <button data-load="${s.id}" style="margin-left:8px;" class="btn btn-ghost small">Editar</button></li>`).join('')}</ul>` : '<p class="small">No hay guardadas</p>';
-    elAll('#miniSaved [data-load]').forEach(b => b.addEventListener('click', ()=> (async ()=> await renderCreator(b.getAttribute('data-load')))()));
+    elAll('#miniSaved [data-load]').forEach(b => b.addEventListener('click', ()=> renderCreator(b.getAttribute('data-load'))));
   }
 }
 
-async function renderList(){
-  const surveys = await DB.loadSurveys();
+
+function renderList(){
+  const surveys = DB.loadSurveys();
   contentArea.innerHTML = `
     <h3 style="margin:0 0 8px 0; font-weight:700;">Encuestas guardadas</h3>
     <div style="margin-top:12px;">
@@ -738,46 +722,37 @@ async function renderList(){
       </tbody></table>` : '<p class="small">No hay encuestas guardadas.</p>'}
     </div>
   `;
-  elAll('[data-edit]').forEach(b => b.addEventListener('click', ()=> (async ()=> await renderCreator(b.getAttribute('data-edit')))()));
+  elAll('[data-edit]').forEach(b => b.addEventListener('click', ()=> renderCreator(b.getAttribute('data-edit'))));
   elAll('[data-delete]').forEach(b => b.addEventListener('click', async ()=> {
     const id = b.getAttribute('data-delete');
     const ok = await serverConfirm('Eliminar encuesta?');
     if(!ok) return;
     serverShow({ loading:'Eliminando...', message:'Enviando petición al servidor...' });
-    try {
-      await DB.deleteSurvey(id);
-      modalRoot.style.display='none';
-      await serverAlert('Encuesta eliminada');
-      await renderList();
-    } catch(e){
-      modalRoot.style.display='none';
-      await serverAlert('Error: ' + (e.message||e));
-    }
+    setTimeout(()=> { DB.deleteSurvey(id); modalRoot.style.display='none'; serverAlert('Encuesta eliminada'); renderList(); }, 600);
   }));
-  elAll('[data-share]').forEach(b => b.addEventListener('click', async ()=> {
+  elAll('[data-share]').forEach(b => b.addEventListener('click', ()=> {
     const id = b.getAttribute('data-share');
-    const surveys = await DB.loadSurveys();
-    const s = surveys.find(x=>x.id===id);
+    const s = DB.loadSurveys().find(x=>x.id===id);
     if(!s) return serverAlert('No encontrada');
     const payload = JSON.stringify(s);
     navigator.clipboard?.writeText(payload).then(()=> serverAlert('Encuesta copiada al portapapeles (JSON). Puedes pegarla en otro SmartForm.'));
   }));
 }
 
-async function renderResponderList(){
-  const surveys = await DB.loadSurveys();
+
+function renderResponderList(){
+  const surveys = DB.loadSurveys();
   contentArea.innerHTML = `
     <h3 style="margin:0 0 8px 0; font-weight:700;">Responder encuesta</h3>
     <div style="margin-top:12px;">
       ${surveys.length ? `<ul>${surveys.map(s=>`<li style="padding:10px 0;"><strong>${escapeHtml(s.title)}</strong> • ${new Date(s.createdAt).toLocaleDateString()} <button data-take="${s.id}" class="btn btn-ghost" style="margin-left:8px;">Responder</button></li>`).join('')}</ul>` : '<p class="small">No hay encuestas disponibles.</p>'}
     </div>
   `;
-  elAll('[data-take]').forEach(b => b.addEventListener('click', ()=> (async ()=> await renderTakeSurvey(b.getAttribute('data-take')))()));
+  elAll('[data-take]').forEach(b => b.addEventListener('click', ()=> renderTakeSurvey(b.getAttribute('data-take'))));
 }
 
-async function renderTakeSurvey(id){
-  const surveys = await DB.loadSurveys();
-  const s = surveys.find(x=>x.id===id);
+function renderTakeSurvey(id){
+  const s = DB.loadSurveys().find(x=>x.id===id);
   if(!s) return serverAlert('Encuesta no encontrada', { title:'Error' });
   let answers = {};
   contentArea.innerHTML = `
@@ -827,26 +802,24 @@ async function renderTakeSurvey(id){
     form.appendChild(qElm);
   });
 
-  el('#submitResp').addEventListener('click', async (ev)=> {
+  el('#submitResp').addEventListener('click', (ev)=> {
     ev.preventDefault();
     const responder = el('#responderName').value.trim() || usuario.nombre || 'Anon';
     const resp = { id: uid('resp'), surveyId: s.id, responder, submittedAt: timeNow(), answers };
+    // simulate server send
     serverShow({ loading: 'Enviando respuestas...', message: 'Comunicación con servidor...' });
-    try {
-      await DB.addResponse(resp);
+    setTimeout(()=> {
+      DB.addResponse(resp);
       modalRoot.style.display = 'none';
-      await serverAlert('Respuesta enviada. ¡Gracias!');
-      await navigate('inicio');
-    } catch(e){
-      modalRoot.style.display = 'none';
-      await serverAlert('Error enviando respuesta: ' + (e.message||e));
-    }
+      serverAlert('Respuesta enviada. ¡Gracias!');
+      navigate('inicio');
+    }, 700);
   });
 }
 
-async function renderReportes(){
-  const surveys = await DB.loadSurveys();
-  const responses = await DB.loadResponses();
+function renderReportes(){
+  const surveys = DB.loadSurveys();
+  const responses = DB.loadResponses();
   contentArea.innerHTML = `
     <h3 style="margin:0 0 8px 0; font-weight:700;">Reportes</h3>
     <div style="margin-top:12px;">
@@ -868,13 +841,15 @@ async function renderReportes(){
       </div>
     </div>`;
   }).join('');
-  elAll('[data-open]').forEach(b => b.addEventListener('click', ()=> (async ()=> await showReportDetail(b.getAttribute('data-open')))()));
+  elAll('[data-open]').forEach(b => b.addEventListener('click', ()=> {
+    const id = b.getAttribute('data-open');
+    showReportDetail(id);
+  }));
 }
 
-async function showReportDetail(surveyId){
-  const surveys = await DB.loadSurveys();
-  const s = surveys.find(x=>x.id===surveyId);
-  const resps = (await DB.loadResponses()).filter(r=>r.surveyId===surveyId);
+function showReportDetail(surveyId){
+  const s = DB.loadSurveys().find(x=>x.id===surveyId);
+  const resps = DB.loadResponses().filter(r=>r.surveyId===surveyId);
   let html = `<h4 style="margin:0 0 8px 0;">${escapeHtml(s.title)}</h4><p class="small">Respuestas: ${resps.length}</p>`;
   if(resps.length === 0) html += `<p class="small mt-2">Aún no hay respuestas.</p>`;
   else {
@@ -898,9 +873,7 @@ async function showReportDetail(surveyId){
   modalCancel.onclick = ()=> { modalRoot.style.display='none'; };
 }
 
-// --------------------------
-// Preview, help, perfil (perfil sigue guardando foto & profile en localStorage)
-// --------------------------
+
 function showPreview(survey){
   let html = `<h4 style="margin:0 0 8px 0;">${escapeHtml(survey.title)}</h4>`;
   survey.questions.forEach((q,i)=>{
@@ -914,6 +887,7 @@ function showPreview(survey){
   modalOk.onclick = ()=> { modalRoot.style.display = 'none'; };
   modalRoot.style.display = 'flex';
 }
+
 
 function showHelpModal(){
   const tips = [
@@ -930,7 +904,9 @@ function showHelpModal(){
   modalRoot.style.display = 'flex';
 }
 
-async function renderPerfil(){
+
+function renderPerfil(){
+  
   const key = 'sf_profile_' + (usuario.correo || 'anon');
   const stored = JSON.parse(localStorage.getItem(key) || 'null');
   usuario = Object.assign(usuario, stored || {});
@@ -993,7 +969,6 @@ async function renderPerfil(){
   });
 }
 
-// service worker minimal register (keeps original behavior)
 if('serviceWorker' in navigator){
   const sw = `self.addEventListener('install', e=>{ self.skipWaiting(); });
   self.addEventListener('activate', e=>{ self.clients.claim(); });
@@ -1003,11 +978,12 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register(url).catch(()=>{/* silence */});
 }
 
+
 document.addEventListener('DOMContentLoaded', ()=> {
   document.addEventListener('keydown', e => { if(e.ctrlKey && e.key.toLowerCase()==='k'){ /* toggle a visual hint */ elAll('.nav-item')[0].classList.toggle('active'); } });
+
 });
 document.getElementById('videoLogin').style.display='block';
-
 </script>
 </body>
 </html>
